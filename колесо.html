@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Выбора</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        label {
+            color: #555;
+            font-size: 14px;
+        }
+
+        input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #spinBtn {
+            background-color: #4a90e2;
+            color: white;
+        }
+
+        #resetBtn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 30px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+
+        .wheel-section {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: bottom right;
+            left: 0;
+            top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            overflow: hidden;
+            padding-left: 20px;
+            text-align: center;
+            border: none;
+        }
+
+        /* Убираем пробелы между секциями */
+        .wheel-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background-color: white;
+            z-index: 2;
+        }
+
+        .wheel-section:last-child::before {
+            display: none;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            z-index: 10;
+        }
+
+        .pointer:before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4757;
+        }
+
+        .result {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result h3 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        #resultText {
+            font-size: 22px;
+            color: #2d3436;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .spinning {
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.7; }
+        }
+
+        .history {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        .history h4 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .history-item {
+            padding: 5px 10px;
+            border-bottom: 1px solid #e9ecef;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .spins-counter {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎡 Колесо Выбора</h1>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label>Первый вариант:</label>
+                <input type="text" id="option1" placeholder="Введите первый вариант">
+            </div>
+            <div class="input-group">
+                <label>Второй вариант:</label>
+                <input type="text" id="option2" placeholder="Введите второй вариант">
+            </div>
+            <div class="input-group">
+                <label>Третий вариант:</label>
+                <input type="text" id="option3" placeholder="Введите третий вариант">
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="spinBtn">Крутить колесо</button>
+            <button id="resetBtn">Сбросить</button>
+        </div>
+
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel"></div>
+        </div>
+
+        <div class="result">
+            <h3>Результат:</h3>
+            <div id="resultText">Введите варианты и крутите колесо</div>
+        </div>
+
+        <div class="history">
+            <h4>История:</h4>
+            <div id="historyList"></div>
+        </div>
+
+        <div class="spins-counter">
+            <span id="spinsCount">Вращений: 0</span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const wheel = document.getElementById('wheel');
+            const spinBtn = document.getElementById('spinBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const resultText = document.getElementById('resultText');
+            const historyList = document.getElementById('historyList');
+            const spinsCountElement = document.getElementById('spinsCount');
+
+            const option1Input = document.getElementById('option1');
+            const option2Input = document.getElementById('option2');
+            const option3Input = document.getElementById('option3');
+
+            let spinsCount = 0;
+            let isSpinning = false;
+            let currentRotation = 0;
+
+            const colors = ['#4a90e2', '#50c878', '#ffa500'];
+
+            function initializeWheel() {
+                wheel.innerHTML = '';
+                const options = [
+                    option1Input.value || "Вариант 1",
+                    option2Input.value || "Вариант 2",
+                    option3Input.value || "Вариант 3"
+                ];
+
+                options.forEach((option, index) => {
+                    const section = document.createElement('div');
+                    section.className = 'wheel-section';
+
+                    const text = option.length > 12 ? option.substring(0, 12) + '...' : option;
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = text;
+                    textSpan.style.transform = `rotate(60deg)`;
+                    textSpan.style.display = 'block';
+                    textSpan.style.transformOrigin = '0 0';
+                    textSpan.style.position = 'absolute';
+                    textSpan.style.left = '50%';
+                    textSpan.style.top = '10px';
+                    textSpan.style.width = '100px';
+
+                    section.appendChild(textSpan);
+                    section.style.backgroundColor = colors[index];
+
+                    const angle = 120 * index;
+                    section.style.transform = `rotate(${angle}deg)`;
+
+                    wheel.appendChild(section);
+                });
+            }
+
+            function spinWheel() {
+                if (isSpinning) return;
+
+                const options = [
+                    option1Input.value || "Вариант 1",
+                    option2Input.value || "Вариант 2",
+                    option3Input.value || "Вариант 3"
+                ];
+
+                if (!options[0]) {
+                    resultText.textContent = "Введите первый вариант";
+                    return;
+                }
+
+                isSpinning = true;
+                spinBtn.disabled = true;
+                spinBtn.classList.add('spinning');
+                resultText.textContent = "Крутим...";
+
+                // Получаем текущее положение первого сектора
+                // Первый сектор занимает углы от 0 до 120 градусов
+                // Стрелка находится вверху (90 градусов)
+                // Чтобы стрелка указывала на центр первого сектора,
+                // нужно чтобы сектор был повернут так, чтобы его середина (60 градусов)
+                // оказалась в положении 90 градусов (где стрелка)
+
+                // Текущий угол первого сектора
+                const currentFirstSectorAngle = currentRotation % 360;
+
+                // Угол, на который нужно повернуть, чтобы первый сектор оказался под стрелкой
+                // Мы хотим, чтобы середина первого сектора (60 градусов) была под стрелкой (90 градусов)
+                // Разница: 90 - 60 = 30 градусов
+                // Но поскольку вращение происходит по часовой стрелке, а CSS поворачивает против,
+                // нужно это учитывать
+
+                // Добавляем несколько полных оборотов для реалистичности
+                const fullRotations = 5 + Math.floor(Math.random() * 3);
+
+                // Рассчитываем конечный угол так, чтобы первый сектор был под стрелкой
+                // Позиция середины первого сектора после вращения должна быть 90 градусов
+                // currentRotation + finalAngle должно давать угол, при котором
+                // (60 + currentRotation + finalAngle) % 360 = 90
+
+                // Упрощенный расчет: начинаем с текущего положения и добавляем вращение
+                // так, чтобы закончить в позиции, где первый сектор под стрелкой
+                const targetRelativeAngle = 90 - 60; // 30 градусов
+
+                // Но нужно учесть текущее положение и несколько полных оборотов
+                const totalRotation = fullRotations * 360 + targetRelativeAngle;
+
+                // Вычисляем, насколько нужно повернуть от текущего положения
+                const additionalRotation = totalRotation - (currentRotation % 360);
+
+                const finalRotation = currentRotation + additionalRotation;
+
+                // Применяем вращение
+                wheel.style.transform = `rotate(${finalRotation}deg)`;
+                currentRotation = finalRotation;
+
+                // Симуляция времени вращения
+                setTimeout(() => {
+                    const selectedOption = options[0];
+
+                    resultText.textContent = selectedOption;
+
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    const now = new Date();
+                    const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+                    historyItem.textContent = `${time}: ${selectedOption}`;
+                    historyList.prepend(historyItem);
+
+                    spinsCount++;
+                    spinsCountElement.textContent = `Вращений: ${spinsCount}`;
+
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    spinBtn.classList.remove('spinning');
+
+                    resultText.style.color = '#4a90e2';
+                    resultText.style.fontWeight = 'bold';
+                    setTimeout(() => {
+                        resultText.style.color = '#2d3436';
+                    }, 1000);
+
+                }, 4000);
+            }
+
+            function resetWheel() {
+                wheel.style.transform = 'rotate(0deg)';
+                currentRotation = 0;
+                resultText.textContent = 'Введите варианты и крутите колесо';
+                resultText.style.color = '#2d3436';
+                resultText.style.fontWeight = 'normal';
+                initializeWheel();
+            }
+
+            spinBtn.addEventListener('click', spinWheel);
+            resetBtn.addEventListener('click', resetWheel);
+
+            [option1Input, option2Input, option3Input].forEach(input => {
+                input.addEventListener('input', initializeWheel);
+            });
+
+            initializeWheel();
+        });
+    </script>
+</body>
+</html>
